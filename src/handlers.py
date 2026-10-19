@@ -1,39 +1,25 @@
-
 from aiogram import F, Router
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 
-from src.keyboards import reply_keyboard, inline_keyboard
+from src.keyboards import reply_keyboard, inline_keyboard, restart_keyboard
+from src.questions import QUESTIONS
 
 
 router = Router()
 
 
+class Quiz(StatesGroup):
+    waiting_answer = State()
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     await message.answer(
-        f"Привет, {message.from_user.full_name}!\n"
-        "Выбери язык программирования:",
+        f"Привет, {message.from_user.full_name}!",
         reply_markup=reply_keyboard,
-    )
-
-
-@router.message(Command("help"))
-async def cmd_help(message: Message):
-    await message.answer(
-        "/start - приветствие\n"
-        "/help - список команд\n"
-        "/docs - документация языков\n"
-        "/about - информация о боте"
-    )
-
-
-@router.message(Command("about"))
-async def cmd_about(message: Message):
-    await message.answer(
-        "Я учебный Telegram-бот. "
-        "Показываю описания языков программирования "
-        "и ссылки на их официальную документацию."
     )
 
 
@@ -45,25 +31,59 @@ async def cmd_docs(message: Message):
     )
 
 
-@router.message(F.text.lower() == "python")
-async def answer_python(message: Message):
+async def start_quiz(message: Message, state: FSMContext):
+    await state.update_data(index=0, score=0)
+    await state.set_state(Quiz.waiting_answer)
     await message.answer(
-        "Python — простой и читаемый язык программирования. "
-        "Подходит для Backend-разработки, автоматизации и анализа данных."
+        f"Вопрос 1: {QUESTIONS[0]['q']}"
     )
 
 
-@router.message(F.text.lower() == "java")
-async def answer_java(message: Message):
-    await message.answer(
-        "Java — язык программирования, который используют "
-        "для Backend-разработки, корпоративных приложений и Android."
+@router.callback_query(F.data == "quiz_start")
+async def quiz_start(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.update_data(index=0, score=0)
+    await state.set_state(Quiz.waiting_answer)
+    await callback.message.answer(
+        f"Вопрос 1: {QUESTIONS[0]['q']}"
     )
 
 
-@router.message(F.text.lower() == "javascript")
-async def answer_javascript(message: Message):
-    await message.answer(
-        "JavaScript — язык программирования для интерактивных сайтов "
-        "и серверных приложений."
-    )
+@router.message(Command("quiz"))
+async def cmd_quiz(message: Message, state: FSMContext):
+    await start_quiz(message, state)
+
+
+@router.message(Quiz.waiting_answer)
+async def handle_answer(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправь ответ текстом.")
+        return
+
+    data = await state.get_data()
+    index = data["index"]
+    score = data["score"]
+
+    if message.text.strip().lower() == QUESTIONS[index]["a"].lower():
+        score += 1
+        await message.answer("Правильно! +1 балл")
+    else:
+        await message.answer(
+            f"Неверно. Правильный ответ: {QUESTIONS[index]['a']}"
+        )
+
+    index += 1
+
+    if index >= len(QUESTIONS):
+        await message.answer(
+            f"Викторина окончена!\n"
+            f"Твой результат: {score}/{len(QUESTIONS)}",
+            reply_markup=restart_keyboard,
+        )
+        await state.clear()
+    else:
+        await state.update_data(index=index, score=score)
+        await message.answer(
+            f"Вопрос {index + 1}: {QUESTIONS[index]['q']}"
+        )
+

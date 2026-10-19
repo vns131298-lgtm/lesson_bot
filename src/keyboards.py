@@ -30,3 +30,12 @@ inline_keyboard = InlineKeyboardMarkup(
         )],
     ]
 )
+
+restart_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text="🔄 Сыграть снова",
+            callback_data="quiz_start"
+        )
+    ]
+])
