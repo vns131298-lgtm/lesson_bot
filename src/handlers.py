@@ -1,6 +1,10 @@
+
 from aiogram import F, Router
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
+
+from src.keyboards import reply_keyboard, inline_keyboard
+
 
 router = Router()
 
@@ -8,11 +12,9 @@ router = Router()
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     await message.answer(
-        f"Привет, {message.from_user.full_name}! Я твой первый бот."
-    )
-    print(
-        f"Пользователь {message.from_user.full_name}, "
-        f"с никнеймом {message.from_user.username} отправил команду /start"
+        f"Привет, {message.from_user.full_name}!\n"
+        "Выбери язык программирования:",
+        reply_markup=reply_keyboard,
     )
 
 
@@ -21,6 +23,7 @@ async def cmd_help(message: Message):
     await message.answer(
         "/start - приветствие\n"
         "/help - список команд\n"
+        "/docs - документация языков\n"
         "/about - информация о боте"
     )
 
@@ -28,29 +31,39 @@ async def cmd_help(message: Message):
 @router.message(Command("about"))
 async def cmd_about(message: Message):
     await message.answer(
-        "Я учебный Telegram-бот.\n"
-        "Умею отвечать на команды и повторять ваши сообщения."
+        "Я учебный Telegram-бот. "
+        "Показываю описания языков программирования "
+        "и ссылки на их официальную документацию."
     )
 
 
-@router.message(F.text.lower() == "группа")
-async def get_group(message: Message):
-    await message.answer("Твоя группа 70-1")
+@router.message(Command("docs"))
+async def cmd_docs(message: Message):
+    await message.answer(
+        "Выбери язык, чтобы перейти к официальной документации:",
+        reply_markup=inline_keyboard,
+    )
 
 
-@router.message(F.from_user.id == 1288365917)
-async def get_creator(message: Message):
-    await message.answer("Привет мой создатель!!!!!")
+@router.message(F.text.lower() == "python")
+async def answer_python(message: Message):
+    await message.answer(
+        "Python — простой и читаемый язык программирования. "
+        "Подходит для Backend-разработки, автоматизации и анализа данных."
+    )
 
 
-@router.message(F.text.lower() == "пока")
-async def say_goodbye(message: Message):
-    await message.answer("Пока! До встречи!")
+@router.message(F.text.lower() == "java")
+async def answer_java(message: Message):
+    await message.answer(
+        "Java — язык программирования, который используют "
+        "для Backend-разработки, корпоративных приложений и Android."
+    )
 
 
-@router.message()
-async def echo(message: Message):
-    if message.text == "Николай":
-        await message.answer("я поймал твое имя")
-    else:
-        await message.answer(f"Ты написал: {message.text}")
+@router.message(F.text.lower() == "javascript")
+async def answer_javascript(message: Message):
+    await message.answer(
+        "JavaScript — язык программирования для интерактивных сайтов "
+        "и серверных приложений."
+    )
