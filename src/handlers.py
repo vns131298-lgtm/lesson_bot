@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 
 from src.keyboards import reply_keyboard, inline_keyboard, restart_keyboard
 from src.questions import QUESTIONS
-
+from db.users import create_user
+from db.results import save_result
 
 router = Router()
 
@@ -17,10 +18,17 @@ class Quiz(StatesGroup):
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
+    user = create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.full_name or "Аноним",
+    )
+
     await message.answer(
         f"Привет, {message.from_user.full_name}!",
         reply_markup=reply_keyboard,
     )
+
+    print(f"Пользователь добавлен или уже существует: {user}")
 
 
 @router.message(Command("docs"))
@@ -75,6 +83,10 @@ async def handle_answer(message: Message, state: FSMContext):
     index += 1
 
     if index >= len(QUESTIONS):
+        save_result(
+            telegram_id=message.from_user.id,
+            score=score,
+        )
         await message.answer(
             f"Викторина окончена!\n"
             f"Твой результат: {score}/{len(QUESTIONS)}",
