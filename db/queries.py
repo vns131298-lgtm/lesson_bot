@@ -1,3 +1,5 @@
+# USERS
+
 CREATE_USERS_TABLE = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,11 +25,14 @@ DELETE_USER = """
 DELETE FROM users WHERE telegram_id = ?
 """
 
+
+# QUESTIONS
+
 CREATE_QUESTIONS_TABLE = """
 CREATE TABLE IF NOT EXISTS questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    question TEXT NOT NULL,
-    answer TEXT NOT NULL
+    question_text TEXT NOT NULL,
+    correct_answer TEXT NOT NULL
 )
 """
 
@@ -40,25 +45,61 @@ SELECT * FROM questions WHERE id = ?
 """
 
 INSERT_QUESTION = """
-INSERT INTO questions (question, answer)
+INSERT INTO questions (question_text, correct_answer)
 VALUES (?, ?)
+"""
+
+UPDATE_QUESTION = """
+UPDATE questions
+SET question_text = ?, correct_answer = ?
+WHERE id = ?
+"""
+
+DELETE_QUESTION = """
+DELETE FROM questions WHERE id = ?
 """
 
 
 # RESULTS
+
 CREATE_RESULTS_TABLE = """
 CREATE TABLE IF NOT EXISTS results (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telegram_id INTEGER NOT NULL,
-    score INTEGER NOT NULL
+    user_id INTEGER NOT NULL,
+    question_id INTEGER NOT NULL,
+    is_correct INTEGER NOT NULL
 )
 """
 
 INSERT_RESULT = """
-INSERT INTO results (telegram_id, score)
-VALUES (?, ?)
+INSERT INTO results (user_id, question_id, is_correct)
+VALUES (?, ?, ?)
+"""
+
+GET_RESULT_BY_ID = """
+SELECT * FROM results WHERE id = ?
+"""
+
+GET_ALL_RESULTS = """
+SELECT * FROM results
 """
 
 GET_USER_RESULTS = """
-SELECT * FROM results WHERE telegram_id = ?
+SELECT * FROM results WHERE user_id = ?
+"""
+
+UPDATE_RESULT = """
+UPDATE results
+SET user_id = ?, question_id = ?, is_correct = ?
+WHERE id = ?
+"""
+
+DELETE_RESULT = """
+DELETE FROM results WHERE id = ?
+"""
+
+GET_SCORE_BY_USER_ID = """
+SELECT COUNT(*) AS total, SUM(is_correct) AS correct
+FROM results
+WHERE user_id = ?
 """

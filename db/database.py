@@ -1,13 +1,11 @@
 import sqlite3
-
+from src.questions import QUESTIONS
+from db.queries import INSERT_QUESTION, GET_ALL_QUESTIONS
 from db.queries import (
     CREATE_USERS_TABLE,
     CREATE_QUESTIONS_TABLE,
     CREATE_RESULTS_TABLE,
-    GET_ALL_QUESTIONS,
-    INSERT_QUESTION,
 )
-from src.questions import QUESTIONS
 
 DB_NAME = "quiz.db"
 
