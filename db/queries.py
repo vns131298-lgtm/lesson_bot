@@ -103,3 +103,26 @@ SELECT COUNT(*) AS total, SUM(is_correct) AS correct
 FROM results
 WHERE user_id = ?
 """
+
+GET_TOP = """
+SELECT u.username,
+       COUNT(*) AS total,
+       SUM(r.is_correct) AS correct
+FROM results AS r
+INNER JOIN users AS u
+    ON r.user_id = u.id
+GROUP BY r.user_id
+ORDER BY correct DESC
+LIMIT 3
+"""
+
+GET_HARDEST = """
+SELECT q.question_text,
+       ROUND(AVG(r.is_correct) * 100, 1) AS success_rate
+FROM results AS r
+INNER JOIN questions AS q
+    ON r.question_id = q.id
+GROUP BY r.question_id
+ORDER BY success_rate ASC
+LIMIT 1
+"""

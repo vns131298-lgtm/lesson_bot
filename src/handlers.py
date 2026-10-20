@@ -8,6 +8,7 @@ from src.keyboards import reply_keyboard, inline_keyboard, restart_keyboard
 from db.users import create_user, get_user
 from db.questions import get_all_questions
 from db.results import save_result, get_score
+from db.stats import get_top, get_hardest_question
 
 router = Router()
 
@@ -167,3 +168,39 @@ async def handle_answer(message: Message, state: FSMContext):
             f"Вопрос {index + 1}: "
             f"{questions[index]['question_text']}"
         )
+
+
+
+@router.message(Command("top"))
+async def top_handler(message: Message):
+    players = get_top()
+
+    if not players:
+        await message.answer("Пока нет результатов.")
+        return
+
+    text = "🏆 Топ-3 игроков:\n\n"
+
+    for i, player in enumerate(players, start=1):
+        text += (
+            f"{i}. {player['username'] or 'Без имени'} — "
+            f"{player['correct']} правильных ответов "
+            f"из {player['total']}\n"
+        )
+
+    await message.answer(text)
+
+
+@router.message(Command("hardest"))
+async def hardest_handler(message: Message):
+    question = get_hardest_question()
+
+    if not question:
+        await message.answer("Пока нет результатов.")
+        return
+
+    await message.answer(
+        f"🧠 Самый сложный вопрос:\n"
+        f"{question['question_text']}\n"
+        f"Процент правильных ответов: {question['success_rate']}%"
+    )
